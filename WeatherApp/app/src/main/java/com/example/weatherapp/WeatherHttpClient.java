@@ -5,9 +5,8 @@ import android.os.AsyncTask;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.IOException;
-import okhttp3.FormBody;
+import java.util.HashMap;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -15,24 +14,28 @@ import okhttp3.Response;
  */
 
 public class WeatherHttpClient {
-    private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?q=";
+    private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?id=";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
-    private static String OPENWEATHERAPP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
+    private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
     private String m_weatherData;
 
-    public static final String[] LOCATIONS = new String[]{
-            "Cluj-Napoca", "Jibou", "Toplita"
-    };
+    public static final HashMap<String, Integer> LOCATIONS;
+    static
+    {
+        LOCATIONS = new HashMap<String, Integer>();
+        LOCATIONS.put("Cluj-Napoca", 681290);
+        LOCATIONS.put("Jibou", 675261);
+        LOCATIONS.put("Borsec", 684143);
+        LOCATIONS.put("Zalau", 662334);
+        LOCATIONS.put("Sibiu", 667268);
+    }
 
-    public class RetrieveWeatherDataTask extends AsyncTask<String, Void, String> {
+    public class RetrieveWeatherDataTask extends AsyncTask<Integer, Void, String> {
         @Override
-        protected String doInBackground(String... params) {
-            String myUrl = BASE_URL + "Toplita,ro&APPID=" + OPENWEATHERAPP_API_KEY;
+        protected String doInBackground(Integer... params) {
+            String myUrl = BASE_URL + params[0] + "&APPID=" + OPENWEATHERMAP_API_KEY;
 
-            FormBody.Builder formBuilder = new FormBody.Builder().add("location", "Toplita, ro");
-
-            RequestBody formBody = formBuilder.build();
             Request request = new Request.Builder()
                     .url(myUrl)
                     .build();
@@ -51,9 +54,9 @@ public class WeatherHttpClient {
         }
     }
 
-    public Double getTemperature() {
+    public Double getTemperature(int locationID) {
         try {
-            String weatherData = new RetrieveWeatherDataTask().execute("").get();
+            String weatherData = new RetrieveWeatherDataTask().execute(locationID).get();
 
             JSONObject jObject = new JSONObject(weatherData);
             JSONObject mainObject = jObject.getJSONObject("main");
