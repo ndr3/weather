@@ -10,9 +10,9 @@ public class MainDTO {
 
     public float temp;
 
-    public int pressure;
+    public float pressure;
 
-    public int humidity;
+    public float humidity;
 
     @SerializedName("temp_min")
     public float tempMin;
