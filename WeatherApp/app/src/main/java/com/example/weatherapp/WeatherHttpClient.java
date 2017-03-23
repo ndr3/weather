@@ -2,6 +2,9 @@ package com.example.weatherapp;
 
 import android.os.AsyncTask;
 
+import com.example.weatherapp.model.WeatherDTO;
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.IOException;
@@ -47,6 +50,12 @@ public class WeatherHttpClient {
                     throw new IOException(response.message() + " " + response.toString());
                 }
                 m_weatherData = response.body().string();
+
+                Gson gson = new Gson();
+                WeatherDTO weatherDTO = gson.fromJson(m_weatherData, WeatherDTO.class);
+
+                int size = weatherDTO.weather.length;
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
