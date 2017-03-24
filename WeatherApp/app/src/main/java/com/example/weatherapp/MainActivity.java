@@ -5,19 +5,19 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.weatherapp.model.WeatherDTO;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import okhttp3.Request;
@@ -25,53 +25,41 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity {
-    private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?id=";
+    private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?q=";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
     private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
     private WeatherDTO m_weatherData;
-
-    public static final HashMap<String, Integer> LOCATIONS;
-
-    static {
-        LOCATIONS = new HashMap<String, Integer>();
-        LOCATIONS.put("Cluj-Napoca", 681290);
-        LOCATIONS.put("Jibou", 675261);
-        LOCATIONS.put("Borsec", 684143);
-        LOCATIONS.put("Zalau", 662334);
-        LOCATIONS.put("Sibiu", 667268);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.autocomplete_location);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, new ArrayList<String>(LOCATIONS.keySet()));
-        textView.setAdapter(adapter);
-
-        textView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        PlaceAutocompleteFragment autoCompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Object item = parent.getItemAtPosition(position);
-                Integer i = LOCATIONS.get((String)item);
-
-                try{
-                    new RetrieveWeatherDataTask().execute(i).get();
+            public void onPlaceSelected(Place place) {
+                try {
+                    new RetrieveWeatherDataTask().execute(place).get();
                     String iconCode = m_weatherData.weather[0].icon;
                     new RetrieveImageTask().execute(iconCode).get();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+
+            @Override
+            public void onError(Status status) {
+                Log.i("PLACE", "An error occurred: " + status);
+            }
         });
     }
 
-    private class RetrieveWeatherDataTask extends AsyncTask<Integer, Void, String> {
+    private class RetrieveWeatherDataTask extends AsyncTask<Place, Void, String> {
         @Override
-        protected String doInBackground(Integer... params) {
-            String myUrl = BASE_URL + params[0] + "&APPID=" + OPENWEATHERMAP_API_KEY + "&units=metric";
+        protected String doInBackground(Place... params) {
+            String myUrl = BASE_URL + params[0].getName() + "&APPID=" + OPENWEATHERMAP_API_KEY + "&units=metric";
 
             Request request = new Request.Builder()
                     .url(myUrl)
