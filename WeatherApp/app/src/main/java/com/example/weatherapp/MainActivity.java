@@ -7,7 +7,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private WeatherDTO mWeatherData;
     private ViewPager mViewPager;
-    private FragmentPagerAdapter mAdapter;
+    private FragmentStatePagerAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public static class WeatherAdapter extends FragmentPagerAdapter {
+    public static class WeatherAdapter extends FragmentStatePagerAdapter {
         int mNumOfTabs;
 
         public WeatherAdapter(FragmentManager fm, int numOfTabs) {
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            WeatherFragment fragment = (WeatherFragment) mAdapter.getItem(mViewPager.getCurrentItem());
+            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
             if (fragment != null) {
                 fragment.setTemperature(result);
             }
@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Bitmap bmp) {
-            WeatherFragment fragment = (WeatherFragment) mAdapter.getItem(mViewPager.getCurrentItem());
+            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
             if (fragment != null) {
                 fragment.setConditionIcon(bmp);
             }
