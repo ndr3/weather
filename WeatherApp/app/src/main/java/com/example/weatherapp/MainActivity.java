@@ -5,20 +5,12 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.ListFragment;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.example.weatherapp.model.WeatherDTO;
 import com.google.android.gms.common.api.Status;
@@ -35,40 +27,55 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity {
-    static final int NUM_ITEMS = 3;
-
     private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s&units=metric";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
     private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
-    private WeatherDTO m_weatherData;
-    static private TextView mTempTextView;
+    static final int NUM_ITEMS = 3;
+
+    private WeatherDTO mWeatherData;
+    private ViewPager mViewPager;
+    private FragmentPagerAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //mTempTextView = (TextView) findViewById(R.id.textview_temp);
 
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
+        PlaceAutocompleteFragment autoCompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                try {
+                    new MainActivity.RetrieveWeatherDataTask().execute(place).get();
+                    String iconCode = mWeatherData.weather[0].icon;
+                    new MainActivity.RetrieveImageTask().execute(iconCode).get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError(Status status) {
+                Log.i("PLACE", "An error occurred: " + status);
+            }
+        });
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 1"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 2"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 3"));
+        tabLayout.addTab(tabLayout.newTab().setText("TODAY"));
+        tabLayout.addTab(tabLayout.newTab().setText("TOMORROW"));
+        tabLayout.addTab(tabLayout.newTab().setText("10 DAYS"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-        final PagerAdapter adapter = new WeatherAdapter
+        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mAdapter = new WeatherAdapter
                 (getSupportFragmentManager(), tabLayout.getTabCount());
-        viewPager.setAdapter(adapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        mViewPager.setAdapter(mAdapter);
+        mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
+                mViewPager.setCurrentItem(tab.getPosition());
             }
 
             @Override
@@ -81,27 +88,30 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
 
+    public static class WeatherAdapter extends FragmentPagerAdapter {
+        int mNumOfTabs;
 
+        public WeatherAdapter(FragmentManager fm, int numOfTabs) {
+            super(fm);
+            mNumOfTabs = numOfTabs;
+        }
 
-        PlaceAutocompleteFragment autoCompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-        autoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                try {
-                    new RetrieveWeatherDataTask().execute(place).get();
-                    String iconCode = m_weatherData.weather[0].icon;
-                    new RetrieveImageTask().execute(iconCode).get();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+        @Override
+        public int getCount() {
+            return mNumOfTabs;
+        }
 
-            @Override
-            public void onError(Status status) {
-                Log.i("PLACE", "An error occurred: " + status);
-            }
-        });
+        @Override
+        public Fragment getItem(int position) {
+            return new WeatherFragment();
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return "OBJECT " + (position + 1);
+        }
     }
 
     private ResponseBody getCallResponse(Request request) {
@@ -132,12 +142,12 @@ public class MainActivity extends AppCompatActivity {
             try {
                 String weatherData = getCallResponse(request).string();
                 Gson gson = new Gson();
-                m_weatherData = gson.fromJson(weatherData, WeatherDTO.class);
+                mWeatherData = gson.fromJson(weatherData, WeatherDTO.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            float temp = m_weatherData.main.temp;
+            float temp = mWeatherData.main.temp;
             DecimalFormat twoDForm = new DecimalFormat("#.#");
 
             return twoDForm.format(temp);
@@ -145,7 +155,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            mTempTextView.setText(result);
+            WeatherFragment fragment = (WeatherFragment) mAdapter.getItem(mViewPager.getCurrentItem());
+            if (fragment != null) {
+                fragment.setTemperature(result);
+            }
         }
     }
 
@@ -172,39 +185,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Bitmap bmp) {
-            //ImageView image = (ImageView) findViewById(R.id.cond_icon);
-            //image.setImageBitmap(Bitmap.createScaledBitmap(bmp, 100, 100, false));
-        }
-    }
-
-    public static class WeatherAdapter extends FragmentPagerAdapter {
-        int mNumOfTabs;
-
-        public WeatherAdapter(FragmentManager fm, int numOfTabs) {
-            super(fm);
-            mNumOfTabs = numOfTabs;
-        }
-
-        @Override
-        public int getCount() {
-            return mNumOfTabs;
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            return new WeatherFragment();
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return "OBJECT " + (position + 1);
-        }
-    }
-
-    public static class WeatherFragment extends Fragment {
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.weather_fragment, container, false);
+            WeatherFragment fragment = (WeatherFragment) mAdapter.getItem(mViewPager.getCurrentItem());
+            if (fragment != null) {
+                fragment.setConditionIcon(bmp);
+            }
         }
     }
 }
