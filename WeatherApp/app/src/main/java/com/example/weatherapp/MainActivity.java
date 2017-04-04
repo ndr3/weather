@@ -1,9 +1,7 @@
 package com.example.weatherapp;
 
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -13,8 +11,6 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import com.example.weatherapp.model.ForecastDTO;
 import com.example.weatherapp.model.WeatherDTO;
@@ -185,12 +181,13 @@ public class MainActivity extends AppCompatActivity {
             WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
             if (fragment != null) {
                 fragment.setTemperature(result);
+                fragment.setCityName(mWeatherData.name);
             }
 
-            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 2);
-            if (fragment != null) {
-                fragment.setTemperature("33");
-            }
+//            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 2);
+//            if (fragment != null) {
+//                fragment.setTemperature("33");
+//            }
         }
     }
 
@@ -219,7 +216,8 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Bitmap bmp) {
             WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
             if (fragment != null) {
-                fragment.setConditionIcon(bmp);
+                fragment.setConditionIcon(mWeatherData.weather[0].id, mWeatherData.sys.sunrise * 1000,
+                        mWeatherData.sys.sunset * 1000);
             }
         }
     }
