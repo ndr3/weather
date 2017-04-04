@@ -1,7 +1,9 @@
 package com.example.weatherapp;
 
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -11,7 +13,10 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.TextView;
 
+import com.example.weatherapp.model.ForecastDTO;
 import com.example.weatherapp.model.WeatherDTO;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
@@ -28,12 +33,14 @@ import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity {
     private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s&units=metric";
+    private static String FORECAST_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s,RO&cnt=%s&APPID=%s";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
     private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
     static final int NUM_ITEMS = 3;
 
     private WeatherDTO mWeatherData;
+    private ForecastDTO mForecastData;
     private ViewPager mViewPager;
     private FragmentStatePagerAdapter mAdapter;
 
@@ -43,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         PlaceAutocompleteFragment autoCompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        //((TextView) autoCompleteFragment).setTextColor(Color.WHITE);
         autoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -85,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
+                mViewPager.setCurrentItem(tab.getPosition());
             }
         });
     }
@@ -105,7 +113,19 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            return new WeatherFragment();
+            WeatherFragment fragment = new WeatherFragment();
+//            switch (position) {
+//                case 0:
+//                    fragment.setTemperature("0");
+//                    break;
+//                case 1:
+//                    fragment.setTemperature("1");
+//                    break;
+//                case 2:
+//                    fragment.setTemperature("2");
+//                    break;
+//            }
+            return fragment;
         }
 
         @Override
@@ -132,17 +152,24 @@ public class MainActivity extends AppCompatActivity {
     private class RetrieveWeatherDataTask extends AsyncTask<Place, Void, String> {
         @Override
         protected String doInBackground(Place... params) {
-            //String myUrl = BASE_URL + params[0].getName() + "&APPID=" + OPENWEATHERMAP_API_KEY + "&units=metric";
-            String myUrl = String.format(BASE_URL, params[0].getName(), OPENWEATHERMAP_API_KEY);
+            String weatherUrl = String.format(BASE_URL, params[0].getName(), OPENWEATHERMAP_API_KEY);
+            String forecastUrl = String.format(FORECAST_URL, params[0].getName(), "11", OPENWEATHERMAP_API_KEY);
 
-            Request request = new Request.Builder()
-                    .url(myUrl)
+            Request weatherRequest = new Request.Builder()
+                    .url(weatherUrl)
+                    .build();
+
+            Request forecastRequest = new Request.Builder()
+                    .url(forecastUrl)
                     .build();
 
             try {
-                String weatherData = getCallResponse(request).string();
+                String weatherData = getCallResponse(weatherRequest).string();
+                String forecastData = getCallResponse(forecastRequest).string();
+
                 Gson gson = new Gson();
                 mWeatherData = gson.fromJson(weatherData, WeatherDTO.class);
+                mForecastData = gson.fromJson(forecastData, ForecastDTO.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -158,6 +185,11 @@ public class MainActivity extends AppCompatActivity {
             WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
             if (fragment != null) {
                 fragment.setTemperature(result);
+            }
+
+            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 2);
+            if (fragment != null) {
+                fragment.setTemperature("33");
             }
         }
     }
