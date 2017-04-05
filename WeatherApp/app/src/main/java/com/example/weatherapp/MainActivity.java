@@ -29,7 +29,7 @@ import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity {
     private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s&units=metric";
-    private static String FORECAST_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s,RO&cnt=%s&APPID=%s";
+    private static String FORECAST_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s,RO&cnt=%s&APPID=%s&units=metric";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
     private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
@@ -145,9 +145,9 @@ public class MainActivity extends AppCompatActivity {
         return response.body();
     }
 
-    private class RetrieveWeatherDataTask extends AsyncTask<Place, Void, String> {
+    private class RetrieveWeatherDataTask extends AsyncTask<Place, Void, Void> {
         @Override
-        protected String doInBackground(Place... params) {
+        protected Void doInBackground(Place... params) {
             String weatherUrl = String.format(BASE_URL, params[0].getName(), OPENWEATHERMAP_API_KEY);
             String forecastUrl = String.format(FORECAST_URL, params[0].getName(), "11", OPENWEATHERMAP_API_KEY);
 
@@ -170,24 +170,22 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            float temp = mWeatherData.main.temp;
-            DecimalFormat twoDForm = new DecimalFormat("#.#");
-
-            return twoDForm.format(temp);
+            return null;
         }
 
         @Override
-        protected void onPostExecute(String result) {
-            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
+        protected void onPostExecute(Void aVoid) {
+            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
             if (fragment != null) {
-                fragment.setTemperature(result);
+                fragment.setTemperature(mWeatherData.main.temp);
                 fragment.setCityName(mWeatherData.name);
             }
 
-//            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 2);
-//            if (fragment != null) {
-//                fragment.setTemperature("33");
-//            }
+            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
+            if (fragment2 != null) {
+                fragment2.setTemperature(mForecastData.list[0].temp.max);
+                fragment2.setCityName(mWeatherData.name);
+            }
         }
     }
 
@@ -214,10 +212,15 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Bitmap bmp) {
-            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
+            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
             if (fragment != null) {
                 fragment.setConditionIcon(mWeatherData.weather[0].id, mWeatherData.sys.sunrise * 1000,
                         mWeatherData.sys.sunset * 1000);
+            }
+
+            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
+            if (fragment2 != null) {
+                fragment2.setConditionIcon(mForecastData.list[0].weather[0].id);
             }
         }
     }

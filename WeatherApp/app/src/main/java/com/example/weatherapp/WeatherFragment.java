@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
 import java.util.Date;
 
 public class WeatherFragment extends Fragment {
@@ -43,8 +44,9 @@ public class WeatherFragment extends Fragment {
         mCityTextView.setText(name);
     }
 
-    public void setTemperature(String temp) {
-        mTempTextView.setText(temp + " ℃");
+    public void setTemperature(float temp) {
+        DecimalFormat twoDForm = new DecimalFormat("#.#");
+        mTempTextView.setText(twoDForm.format(temp) + " ℃");
     }
 
     public void setConditionIcon(int actualId, long sunrise, long sunset) {
@@ -72,6 +74,27 @@ public class WeatherFragment extends Fragment {
                 case 5 : icon = getActivity().getString(R.string.weather_rainy);
                     break;
             }
+        }
+        mCondIcon.setText(icon);
+    }
+
+    public void setConditionIcon(int actualId) {
+        int id = actualId / 100;
+        String icon = "";
+
+        switch(id) {
+            case 2 : icon = getActivity().getString(R.string.weather_thunder);
+                break;
+            case 3 : icon = getActivity().getString(R.string.weather_drizzle);
+                break;
+            case 7 : icon = getActivity().getString(R.string.weather_foggy);
+                break;
+            case 8 : icon = getActivity().getString(R.string.weather_cloudy);
+                break;
+            case 6 : icon = getActivity().getString(R.string.weather_snowy);
+                break;
+            case 5 : icon = getActivity().getString(R.string.weather_rainy);
+                break;
         }
         mCondIcon.setText(icon);
     }

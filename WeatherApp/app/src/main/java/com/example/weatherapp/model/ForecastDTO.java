@@ -12,5 +12,5 @@ public class ForecastDTO {
 
     public int cnt;
 
-    ForecastInfoDTO[] list;
+    public ForecastInfoDTO[] list;
 }
