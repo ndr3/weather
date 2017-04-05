@@ -1,8 +1,5 @@
 package com.example.weatherapp;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -18,25 +15,10 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.gson.Gson;
-
-import java.io.IOException;
-import java.text.DecimalFormat;
-
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity {
-    private static String BASE_URL = "http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s&units=metric";
-    private static String FORECAST_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s,RO&cnt=%s&APPID=%s&units=metric";
-    private static String IMG_URL = "http://api.openweathermap.org/img/w/";
-    private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
-
     static final int NUM_ITEMS = 3;
 
-    private WeatherDTO mWeatherData;
-    private ForecastDTO mForecastData;
     private ViewPager mViewPager;
     private FragmentStatePagerAdapter mAdapter;
 
@@ -46,16 +28,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         PlaceAutocompleteFragment autoCompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-        //((TextView) autoCompleteFragment).setTextColor(Color.WHITE);
         autoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                try {
-                    new MainActivity.RetrieveWeatherDataTask().execute(place).get();
-                    String iconCode = mWeatherData.weather[0].icon;
-                    new MainActivity.RetrieveImageTask().execute(iconCode).get();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                switch (mViewPager.getCurrentItem()) {
+                    case 0:
+                        CurrentWeatherFragment currentWeatherFragment = (CurrentWeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
+                        currentWeatherFragment.setPlace(place);
+                        break;
+                    case 1:
+                    case 2:
+                        ForecastWeatherFragment forecastWeatherFragment = (ForecastWeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
+                        forecastWeatherFragment.setPlace(place);
+                        break;
                 }
             }
 
@@ -72,8 +57,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         mViewPager = (ViewPager) findViewById(R.id.pager);
-        mAdapter = new WeatherAdapter
-                (getSupportFragmentManager(), tabLayout.getTabCount());
+        mAdapter = new WeatherAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
         mViewPager.setAdapter(mAdapter);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -109,119 +93,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            WeatherFragment fragment = new WeatherFragment();
-//            switch (position) {
-//                case 0:
-//                    fragment.setTemperature("0");
-//                    break;
-//                case 1:
-//                    fragment.setTemperature("1");
-//                    break;
-//                case 2:
-//                    fragment.setTemperature("2");
-//                    break;
-//            }
-            return fragment;
+            switch (position) {
+                case 0:
+                    return new CurrentWeatherFragment();
+                case 1:
+                case 2:
+                    return new ForecastWeatherFragment();
+                default:
+                    return new ForecastWeatherFragment();
+            }
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
             return "OBJECT " + (position + 1);
-        }
-    }
-
-    private ResponseBody getCallResponse(Request request) {
-        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
-        Response response = null;
-        try {
-            response = client.newCall(request).execute();
-
-            if (!response.isSuccessful()) {
-                throw new IOException(response.message() + " " + response.toString());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return response.body();
-    }
-
-    private class RetrieveWeatherDataTask extends AsyncTask<Place, Void, Void> {
-        @Override
-        protected Void doInBackground(Place... params) {
-            String weatherUrl = String.format(BASE_URL, params[0].getName(), OPENWEATHERMAP_API_KEY);
-            String forecastUrl = String.format(FORECAST_URL, params[0].getName(), "11", OPENWEATHERMAP_API_KEY);
-
-            Request weatherRequest = new Request.Builder()
-                    .url(weatherUrl)
-                    .build();
-
-            Request forecastRequest = new Request.Builder()
-                    .url(forecastUrl)
-                    .build();
-
-            try {
-                String weatherData = getCallResponse(weatherRequest).string();
-                String forecastData = getCallResponse(forecastRequest).string();
-
-                Gson gson = new Gson();
-                mWeatherData = gson.fromJson(weatherData, WeatherDTO.class);
-                mForecastData = gson.fromJson(forecastData, ForecastDTO.class);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
-            if (fragment != null) {
-                fragment.setTemperature(mWeatherData.main.temp);
-                fragment.setCityName(mWeatherData.name);
-            }
-
-            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
-            if (fragment2 != null) {
-                fragment2.setTemperature(mForecastData.list[0].temp.max);
-                fragment2.setCityName(mWeatherData.name);
-            }
-        }
-    }
-
-    public class RetrieveImageTask extends AsyncTask<String, Void, Bitmap> {
-        @Override
-        protected Bitmap doInBackground(String... params) {
-            String myUrl = IMG_URL + params[0];
-            Request request = new Request.Builder()
-                    .url(myUrl)
-                    .build();
-
-            Bitmap bmp = null;
-            try {
-                ResponseBody body = getCallResponse(request);
-                byte[] result = body.bytes();
-
-                bmp = BitmapFactory.decodeByteArray(result, 0, result.length);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return bmp;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bmp) {
-            WeatherFragment fragment = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
-            if (fragment != null) {
-                fragment.setConditionIcon(mWeatherData.weather[0].id, mWeatherData.sys.sunrise * 1000,
-                        mWeatherData.sys.sunset * 1000);
-            }
-
-            WeatherFragment fragment2 = (WeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
-            if (fragment2 != null) {
-                fragment2.setConditionIcon(mForecastData.list[0].weather[0].id);
-            }
         }
     }
 }
