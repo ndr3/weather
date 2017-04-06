@@ -56,6 +56,10 @@ public class CurrentWeatherFragment extends Fragment {
     }
 
     public void setPlace(Place place) {
+        if (mPlace == place) {
+            return;
+        }
+
         mPlace = place;
 
         try {

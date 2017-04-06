@@ -19,6 +19,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ViewPager mViewPager;
     private FragmentStatePagerAdapter mAdapter;
+    private Place mPlace;
+
+    CurrentWeatherFragment mCurrentWeatherFragment;
+    ForecastWeatherFragment mTomorrowWeatherFragment;
+    ForecastWeatherFragment mTenDaysWeatherFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,15 +34,16 @@ public class MainActivity extends AppCompatActivity {
         autoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
+                mPlace = place;
                 switch (mViewPager.getCurrentItem()) {
                     case 0:
-                        CurrentWeatherFragment currentWeatherFragment = (CurrentWeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
-                        currentWeatherFragment.setPlace(place);
+                        mCurrentWeatherFragment.setPlace(place);
                         break;
                     case 1:
+                        mTomorrowWeatherFragment.setPlace(place);
+                        break;
                     case 2:
-                        ForecastWeatherFragment forecastWeatherFragment = (ForecastWeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
-                        forecastWeatherFragment.setPlace(place);
+                        mTenDaysWeatherFragment.setPlace(place);
                         break;
                 }
             }
@@ -54,14 +60,33 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.addTab(tabLayout.newTab().setText("10 DAYS"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        mViewPager = (ViewPager) findViewById(R.id.pager);
         mAdapter = new WeatherAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+
+        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mViewPager.setOffscreenPageLimit(2);
         mViewPager.setAdapter(mAdapter);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+
+        mCurrentWeatherFragment = (CurrentWeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
+        mTomorrowWeatherFragment = (ForecastWeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
+        mTenDaysWeatherFragment = (ForecastWeatherFragment) mAdapter.instantiateItem(mViewPager, 2);
+
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
+
+                switch (tab.getPosition()) {
+                    case 0:
+                        mCurrentWeatherFragment.setPlace(mPlace);
+                        break;
+                    case 1:
+                        mTomorrowWeatherFragment.setPlace(mPlace);
+                        break;
+                    case 2:
+                        mTenDaysWeatherFragment.setPlace(mPlace);
+                        break;
+                }
             }
 
             @Override

@@ -20,7 +20,7 @@ import okhttp3.Request;
 
 public class ForecastWeatherFragment extends Fragment {
 
-    private static String FORECAST_WEATHER_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s,RO&cnt=%s&APPID=%s&units=metric";
+    private static String FORECAST_WEATHER_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s&cnt=%s&APPID=%s&units=metric";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
     private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
@@ -54,6 +54,10 @@ public class ForecastWeatherFragment extends Fragment {
     }
 
     public void setPlace(Place place) {
+        if (mPlace == place) {
+            return;
+        }
+
         mPlace = place;
 
         try {
@@ -115,7 +119,7 @@ public class ForecastWeatherFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            setTemperature(mForecastData.list[0].temp.max);
+            setTemperature(mForecastData.list[0].temperature.max);
             setCityName(mPlace.getName().toString());
             setConditionIcon(mForecastData.list[0].weather[0].id);
         }
