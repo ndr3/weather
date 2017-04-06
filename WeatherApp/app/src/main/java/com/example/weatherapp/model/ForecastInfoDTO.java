@@ -11,4 +11,8 @@ public class ForecastInfoDTO {
     public TemperatureDTO temperature;
 
     public WeatherInfoDTO[] weather;
+
+    public float pressure;
+
+    public float humidity;
 }

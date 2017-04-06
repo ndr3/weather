@@ -16,6 +16,8 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Locale;
+
 import okhttp3.Request;
 
 public class ForecastWeatherFragment extends Fragment {
@@ -28,6 +30,7 @@ public class ForecastWeatherFragment extends Fragment {
     private Typeface mWeatherFont;
     private TextView mCityTextView;
     private TextView mTempTextView;
+    private TextView mDetailsTextView;
     private TextView mCondIcon;
     private Place mPlace;
 
@@ -47,6 +50,7 @@ public class ForecastWeatherFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_forecast_weather, container, false);
         mCityTextView = (TextView) view.findViewById(R.id.textview_city);
         mTempTextView = (TextView) view.findViewById(R.id.textview_temp);
+        mDetailsTextView = (TextView) view.findViewById(R.id.details_field);
         mCondIcon = (TextView) view.findViewById(R.id.cond_icon);
         mCondIcon.setTypeface(mWeatherFont);
 
@@ -119,9 +123,12 @@ public class ForecastWeatherFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            setTemperature(mForecastData.list[0].temperature.max);
+            setTemperature(mForecastData.list[1].temperature.max);
             setCityName(mPlace.getName().toString());
-            setConditionIcon(mForecastData.list[0].weather[0].id);
+            setConditionIcon(mForecastData.list[1].weather[0].id);
+            mDetailsTextView.setText( mForecastData.list[1].weather[0].description.toUpperCase(Locale.US)
+                    + "\nHumidity: " + mForecastData.list[1].humidity + "%"
+                    + "\nPressure: " + mForecastData.list[1].pressure + " hPa");
         }
     }
 }

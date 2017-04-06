@@ -19,10 +19,21 @@
         android:id="@+id/cond_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
+        android:layout_above="@+id/details_field"
+        android:paddingBottom="@dimen/fragment_vertical_margin"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textSize="70sp" />
+
+    <TextView
+        android:id="@+id/details_field"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="15sp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        />
 
     <TextView
         android:id="@+id/textview_temp"
@@ -31,6 +42,6 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textSize="40sp" />
+        android:textSize="40sp" />s
 
 </RelativeLayout>
