@@ -41,12 +41,13 @@ public class CurrentWeatherFragment extends Fragment implements IWeatherFragment
 
     public void setWeatherData(WeatherDTO weatherData){
         mWeatherData = weatherData;
+        updateWeatherData();
     }
 
     private void updateWeatherData()
     {
         setTemperature(mWeatherData.list[1].temp.max);
-        setCityName("test");
+        setCityName(mWeatherData.city.name);
         setConditionIcon(mWeatherData.list[1].weather[0].id);
         mDetailsTextView.setText(mWeatherData.list[1].weather[0].description.toUpperCase(Locale.US)
                 + "\nHumidity: " + mWeatherData.list[1].humidity + "%"
