@@ -21,13 +21,13 @@ import java.util.Locale;
 
 import okhttp3.Request;
 
-public class CurrentWeatherFragment extends Fragment {
+public class CurrentWeatherFragment extends Fragment implements IWeatherFragment {
 
     private static String CURRENT_WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s&units=metric";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
     private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
-    private WeatherDTO mCurrentWeatherData;
+    private WeatherDTO mWeatherData;
     private Typeface mWeatherFont;
     private TextView mCityTextView;
     private TextView mTempTextView;
@@ -37,6 +37,20 @@ public class CurrentWeatherFragment extends Fragment {
 
     public CurrentWeatherFragment() {
         // Required empty public constructor
+    }
+
+    public void setWeatherData(WeatherDTO weatherData){
+        mWeatherData = weatherData;
+    }
+
+    private void updateWeatherData()
+    {
+        setTemperature(mWeatherData.list[1].temp.max);
+        setCityName("test");
+        setConditionIcon(mWeatherData.list[1].weather[0].id);
+        mDetailsTextView.setText(mWeatherData.list[1].weather[0].description.toUpperCase(Locale.US)
+                + "\nHumidity: " + mWeatherData.list[1].humidity + "%"
+                + "\nPressure: " + mWeatherData.list[1].pressure + " hPa");
     }
 
     @Override
@@ -58,20 +72,6 @@ public class CurrentWeatherFragment extends Fragment {
         return view;
     }
 
-    public void setPlace(Place place) {
-        if (mPlace == place) {
-            return;
-        }
-
-        mPlace = place;
-
-        try {
-            new RetrieveCurrentWeatherDataTask().execute(place).get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public void setCityName(String name) {
         mCityTextView.setText(name);
     }
@@ -81,65 +81,23 @@ public class CurrentWeatherFragment extends Fragment {
         mTempTextView.setText(twoDForm.format(temp) + " ℃");
     }
 
-    public void setConditionIcon(int actualId, long sunrise, long sunset) {
+    public void setConditionIcon(int actualId) {
         int id = actualId / 100;
         String icon = "";
-        if(actualId == 800){
-            long currentTime = new Date().getTime();
-            if(currentTime>=sunrise && currentTime<sunset) {
-                icon = getActivity().getString(R.string.weather_sunny);
-            } else {
-                icon = getActivity().getString(R.string.weather_clear_night);
-            }
-        } else {
-            switch(id) {
-                case 2 : icon = getActivity().getString(R.string.weather_thunder);
-                    break;
-                case 3 : icon = getActivity().getString(R.string.weather_drizzle);
-                    break;
-                case 7 : icon = getActivity().getString(R.string.weather_foggy);
-                    break;
-                case 8 : icon = getActivity().getString(R.string.weather_cloudy);
-                    break;
-                case 6 : icon = getActivity().getString(R.string.weather_snowy);
-                    break;
-                case 5 : icon = getActivity().getString(R.string.weather_rainy);
-                    break;
-            }
+        switch(id) {
+            case 2 : icon = getActivity().getString(R.string.weather_thunder);
+                break;
+            case 3 : icon = getActivity().getString(R.string.weather_drizzle);
+                break;
+            case 7 : icon = getActivity().getString(R.string.weather_foggy);
+                break;
+            case 8 : icon = getActivity().getString(R.string.weather_cloudy);
+                break;
+            case 6 : icon = getActivity().getString(R.string.weather_snowy);
+                break;
+            case 5 : icon = getActivity().getString(R.string.weather_rainy);
+                break;
         }
         mCondIcon.setText(icon);
-    }
-
-    private class RetrieveCurrentWeatherDataTask extends AsyncTask<Place, Void, Void> {
-        @Override
-        protected Void doInBackground(Place... params) {
-            String weatherUrl = String.format(CURRENT_WEATHER_URL, params[0].getName(), OPENWEATHERMAP_API_KEY);
-
-            Request weatherRequest = new Request.Builder()
-                    .url(weatherUrl)
-                    .build();
-
-            try {
-                String weatherData = HttpClientUtil.getCallResponse(weatherRequest).string();
-
-                Gson gson = new Gson();
-                mCurrentWeatherData = gson.fromJson(weatherData, WeatherDTO.class);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            setTemperature(mCurrentWeatherData.main.temp);
-            setCityName(mPlace.getName().toString());
-            setConditionIcon(mCurrentWeatherData.weather[0].id, mCurrentWeatherData.sys.sunrise * 1000,
-                    mCurrentWeatherData.sys.sunset * 1000);
-            mDetailsTextView.setText( mCurrentWeatherData.weather[0].description.toUpperCase(Locale.US)
-                    + "\nHumidity: " + mCurrentWeatherData.main.humidity + "%"
-                    + "\nPressure: " + mCurrentWeatherData.main.pressure + " hPa");
-        }
     }
 }

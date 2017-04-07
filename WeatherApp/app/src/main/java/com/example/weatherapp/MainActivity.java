@@ -1,5 +1,6 @@
 package com.example.weatherapp;
 
+import android.os.AsyncTask;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -9,17 +10,29 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.example.weatherapp.model.WeatherDTO;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.gson.Gson;
+
+import java.io.IOException;
+
+import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity {
+    private static String WEATHER_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s&cnt=%s&APPID=%s&units=metric";
+    private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
+
     static final int NUM_ITEMS = 3;
+    static final int PAGE_LIMIT = 2;
 
     private ViewPager mViewPager;
     private FragmentStatePagerAdapter mAdapter;
     private Place mPlace;
+
+    private WeatherDTO mWeatherData;
 
     CurrentWeatherFragment mCurrentWeatherFragment;
     ForecastWeatherFragment mTomorrowWeatherFragment;
@@ -34,17 +47,10 @@ public class MainActivity extends AppCompatActivity {
         autoCompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                mPlace = place;
-                switch (mViewPager.getCurrentItem()) {
-                    case 0:
-                        mCurrentWeatherFragment.setPlace(place);
-                        break;
-                    case 1:
-                        mTomorrowWeatherFragment.setPlace(place);
-                        break;
-                    case 2:
-                        mTenDaysWeatherFragment.setPlace(place);
-                        break;
+                try {
+                    new MainActivity.RetrieveWeatherDataTask().execute(place).get();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 
@@ -63,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new WeatherAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
 
         mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setOffscreenPageLimit(2);
+        mViewPager.setOffscreenPageLimit(PAGE_LIMIT);
         mViewPager.setAdapter(mAdapter);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
@@ -76,16 +82,9 @@ public class MainActivity extends AppCompatActivity {
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
 
-                switch (tab.getPosition()) {
-                    case 0:
-                        mCurrentWeatherFragment.setPlace(mPlace);
-                        break;
-                    case 1:
-                        mTomorrowWeatherFragment.setPlace(mPlace);
-                        break;
-                    case 2:
-                        mTenDaysWeatherFragment.setPlace(mPlace);
-                        break;
+                if (mWeatherData != null) {
+                    IWeatherFragment fragment = (IWeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
+                    fragment.setWeatherData(mWeatherData);
                 }
             }
 
@@ -99,6 +98,31 @@ public class MainActivity extends AppCompatActivity {
                 mViewPager.setCurrentItem(tab.getPosition());
             }
         });
+    }
+
+    private class RetrieveWeatherDataTask extends AsyncTask<Place, Void, Void> {
+        @Override
+        protected Void doInBackground(Place... params) {
+            String forecastUrl = String.format(WEATHER_URL, params[0].getName(), "11", OPENWEATHERMAP_API_KEY);
+            Request forecastRequest = new Request.Builder()
+                    .url(forecastUrl)
+                    .build();
+
+            try {
+                String forecastData = HttpClientUtil.getCallResponse(forecastRequest).string();
+                Gson gson = new Gson();
+                mWeatherData = gson.fromJson(forecastData, WeatherDTO.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            IWeatherFragment fragment = (IWeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
+            fragment.setWeatherData(mWeatherData);
+        }
     }
 
     public static class WeatherAdapter extends FragmentStatePagerAdapter {

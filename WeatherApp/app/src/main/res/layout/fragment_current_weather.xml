@@ -42,6 +42,6 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textSize="40sp" />s
+        android:textSize="40sp" />
 
 </RelativeLayout>

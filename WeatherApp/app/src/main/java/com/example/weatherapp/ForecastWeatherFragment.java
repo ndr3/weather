@@ -10,7 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.weatherapp.model.ForecastDTO;
+import com.example.weatherapp.model.WeatherDTO;
 import com.google.android.gms.location.places.Place;
 import com.google.gson.Gson;
 
@@ -20,13 +20,13 @@ import java.util.Locale;
 
 import okhttp3.Request;
 
-public class ForecastWeatherFragment extends Fragment {
+public class ForecastWeatherFragment extends Fragment implements IWeatherFragment {
 
     private static String FORECAST_WEATHER_URL ="http://api.openweathermap.org/data/2.5/forecast/daily?q=%s&cnt=%s&APPID=%s&units=metric";
     private static String IMG_URL = "http://api.openweathermap.org/img/w/";
     private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
 
-    private ForecastDTO mForecastData;
+    private WeatherDTO mWeatherData;
     private Typeface mWeatherFont;
     private TextView mCityTextView;
     private TextView mTempTextView;
@@ -36,6 +36,20 @@ public class ForecastWeatherFragment extends Fragment {
 
     public ForecastWeatherFragment() {
         // Required empty public constructor
+    }
+
+    public void setWeatherData(WeatherDTO weatherData){
+        mWeatherData = weatherData;
+    }
+
+    private void updateWeatherData()
+    {
+        setTemperature(mWeatherData.list[1].temp.max);
+        setCityName("test");
+        setConditionIcon(mWeatherData.list[1].weather[0].id);
+        mDetailsTextView.setText(mWeatherData.list[1].weather[0].description.toUpperCase(Locale.US)
+            + "\nHumidity: " + mWeatherData.list[1].humidity + "%"
+            + "\nPressure: " + mWeatherData.list[1].pressure + " hPa");
     }
 
     @Override
@@ -55,20 +69,6 @@ public class ForecastWeatherFragment extends Fragment {
         mCondIcon.setTypeface(mWeatherFont);
 
         return view;
-    }
-
-    public void setPlace(Place place) {
-        if (mPlace == place) {
-            return;
-        }
-
-        mPlace = place;
-
-        try {
-            new RetrieveForecastWeatherDataTask().execute(place).get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void setCityName(String name) {
@@ -99,36 +99,5 @@ public class ForecastWeatherFragment extends Fragment {
                 break;
         }
         mCondIcon.setText(icon);
-    }
-
-    private class RetrieveForecastWeatherDataTask extends AsyncTask<Place, Void, Void> {
-        @Override
-        protected Void doInBackground(Place... params) {
-            String forecastUrl = String.format(FORECAST_WEATHER_URL, params[0].getName(), "11", OPENWEATHERMAP_API_KEY);
-            Request forecastRequest = new Request.Builder()
-                    .url(forecastUrl)
-                    .build();
-
-            try {
-                String forecastData = HttpClientUtil.getCallResponse(forecastRequest).string();
-
-                Gson gson = new Gson();
-                mForecastData = gson.fromJson(forecastData, ForecastDTO.class);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            setTemperature(mForecastData.list[1].temperature.max);
-            setCityName(mPlace.getName().toString());
-            setConditionIcon(mForecastData.list[1].weather[0].id);
-            mDetailsTextView.setText( mForecastData.list[1].weather[0].description.toUpperCase(Locale.US)
-                    + "\nHumidity: " + mForecastData.list[1].humidity + "%"
-                    + "\nPressure: " + mForecastData.list[1].pressure + " hPa");
-        }
     }
 }
