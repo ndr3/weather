@@ -1,7 +1,6 @@
 package com.example.weatherapp;
 
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -12,13 +11,9 @@ import android.widget.TextView;
 
 import com.example.weatherapp.model.WeatherDTO;
 import com.google.android.gms.location.places.Place;
-import com.google.gson.Gson;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Locale;
-
-import okhttp3.Request;
 
 public class ForecastWeatherFragment extends Fragment implements IWeatherFragment {
 
@@ -38,7 +33,7 @@ public class ForecastWeatherFragment extends Fragment implements IWeatherFragmen
         // Required empty public constructor
     }
 
-    public void setWeatherData(WeatherDTO weatherData){
+    public void setWeatherData(WeatherDTO weatherData, int index){
         mWeatherData = weatherData;
         updateWeatherData();
     }

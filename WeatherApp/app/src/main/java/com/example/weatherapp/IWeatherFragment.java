@@ -7,5 +7,5 @@ import com.example.weatherapp.model.WeatherDTO;
  */
 
 public interface IWeatherFragment {
-    public void setWeatherData(WeatherDTO weatherData);
+    public void setWeatherData(WeatherDTO weatherData, int index);
 }

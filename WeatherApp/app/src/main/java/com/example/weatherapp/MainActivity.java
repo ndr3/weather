@@ -34,10 +34,6 @@ public class MainActivity extends AppCompatActivity {
 
     private WeatherDTO mWeatherData;
 
-    CurrentWeatherFragment mCurrentWeatherFragment;
-    ForecastWeatherFragment mTomorrowWeatherFragment;
-    ForecastWeatherFragment mTenDaysWeatherFragment;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,18 +69,15 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mAdapter);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
-        mCurrentWeatherFragment = (CurrentWeatherFragment) mAdapter.instantiateItem(mViewPager, 0);
-        mTomorrowWeatherFragment = (ForecastWeatherFragment) mAdapter.instantiateItem(mViewPager, 1);
-        mTenDaysWeatherFragment = (ForecastWeatherFragment) mAdapter.instantiateItem(mViewPager, 2);
-
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
 
                 if (mWeatherData != null) {
-                    IWeatherFragment fragment = (IWeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
-                    fragment.setWeatherData(mWeatherData);
+                    int index =  mViewPager.getCurrentItem();
+                    IWeatherFragment fragment = (IWeatherFragment) mAdapter.instantiateItem(mViewPager, index);
+                    fragment.setWeatherData(mWeatherData, index);
                 }
             }
 
@@ -120,8 +113,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            IWeatherFragment fragment = (IWeatherFragment) mAdapter.instantiateItem(mViewPager, mViewPager.getCurrentItem());
-            fragment.setWeatherData(mWeatherData);
+            int index =  mViewPager.getCurrentItem();
+            IWeatherFragment fragment = (IWeatherFragment) mAdapter.instantiateItem(mViewPager, index);
+            fragment.setWeatherData(mWeatherData, index);
         }
     }
 
@@ -142,8 +136,8 @@ public class MainActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    return new CurrentWeatherFragment();
                 case 1:
+                    return new DailyWeatherFragment();
                 case 2:
                     return new ForecastWeatherFragment();
                 default:
