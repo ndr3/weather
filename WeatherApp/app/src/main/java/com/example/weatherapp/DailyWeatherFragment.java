@@ -17,10 +17,6 @@ import java.util.Locale;
 
 public class DailyWeatherFragment extends Fragment implements IWeatherFragment {
 
-    private static String CURRENT_WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s&units=metric";
-    private static String IMG_URL = "http://api.openweathermap.org/img/w/";
-    private static String OPENWEATHERMAP_API_KEY = "599f795795dc6a51ffe33c0a3fca858c";
-
     private WeatherDTO mWeatherData;
     private Typeface mWeatherFont;
     private TextView mCityTextView;
@@ -67,16 +63,16 @@ public class DailyWeatherFragment extends Fragment implements IWeatherFragment {
         return view;
     }
 
-    public void setCityName(String name) {
+    private void setCityName(String name) {
         mCityTextView.setText(name);
     }
 
-    public void setTemperature(float temp) {
+    private void setTemperature(float temp) {
         DecimalFormat twoDForm = new DecimalFormat("#.#");
         mTempTextView.setText(twoDForm.format(temp) + " ℃");
     }
 
-    public void setConditionIcon(int actualId) {
+    private void setConditionIcon(int actualId) {
         int id = actualId / 100;
         String icon = "";
         switch(id) {

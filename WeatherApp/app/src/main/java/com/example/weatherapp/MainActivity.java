@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private class RetrieveWeatherDataTask extends AsyncTask<Place, Void, Void> {
         @Override
         protected Void doInBackground(Place... params) {
-            String forecastUrl = String.format(WEATHER_URL, params[0].getName(), "11", OPENWEATHERMAP_API_KEY);
+            String forecastUrl = String.format(WEATHER_URL, params[0].getName(), "12", OPENWEATHERMAP_API_KEY);
             Request forecastRequest = new Request.Builder()
                     .url(forecastUrl)
                     .build();
